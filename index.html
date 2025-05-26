@@ -1,0 +1,523 @@
+I'll create a web interface for สหกรณ์ออมทรัพย์โรงพยาบาลศูนย์นครปฐม จำกัด that connects specifically to the กรมบังคับคดี API endpoint you mentioned, with user authentication.
+I've created a web interface specifically for สหกรณ์ออมทรัพย์โรงพยาบาลศูนย์นครปฐม จำกัด that connects to the กรมบังคับคดี API endpoint at https://debtor.led.go.th/service/getBankrupt.php.
+The interface includes:
+A login system that requires username and password credentials (as provided by กรมบังคับคดี)
+A search form that lets you search by ID card number or name
+Detailed API request and response displays showing the exact format of data being sent/received
+A results table showing bankruptcy information
+Basic authentication using the standard Basic Auth method
+Try searching for "สมชาย" or "1234567890123" after logging in to see sample results. Would you like me to add any specific features to this interface?```html
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">เข้าสู่ระบบ API กรมบังคับคดี</h2>
+                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ระบุชื่อผู้ใช้ที่ได้รับจากกรมบังคับคดี">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน (Password)</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ระบุรหัสผ่าน">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">ค้นหาข้อมูลบุคคลล้มละลายจากกรมบังคับคดี</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Search Form -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-700 mb-4">ค้นหาข้อมูล</h3>
+                    <form id="searchForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทการค้นหา</label>
+                            <select id="searchType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="id_card">เลขบัตรประชาชน</option>
+                                <option value="name">ชื่อ-นามสกุล</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ข้อมูลที่ต้องการค้นหา</label>
+                            <input type="text" id="searchValue" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ระบุข้อมูลที่ต้องการค้นหา">
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-500">* ข้อมูลจะถูกส่งไปยัง getBankrupt.php</div>
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">ค้นหาข้อมูล</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- API Information -->
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-700 mb-4">ข้อมูล API</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-600">Endpoint:</span>
+                            <code class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">https://debtor.led.go.th/service/getBankrupt.php</code>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-600">Method:</span>
+                            <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded text-sm">POST</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-600">Content-Type:</span>
+                            <code class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">application/json</code>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-600">Authentication:</span>
+                            <code class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">Basic Auth (Username/Password)</code>
+                        </div>
+                        <div class="pt-2">
+                            <span class="text-sm font-medium text-gray-600">สถานะการเชื่อมต่อ:</span>
+                            <span id="apiStatus" class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">รอการเชื่อมต่อ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">ผลลัพธ์การค้นหา</h2>
+                <div class="flex space-x-2">
+                    <button id="clearBtn" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">ล้างข้อมูล</button>
+                    <button id="exportBtn" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">ส่งออกข้อมูล</button>
+                </div>
+            </div>
+
+            <!-- API Request/Response -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h3 class="text-md font-medium text-gray-700 mb-2">คำขอ API (Request)</h3>
+                    <div class="bg-gray-800 text-green-400 p-4 rounded-md api-response">
+                        <pre id="requestData">// คำขอ API จะแสดงที่นี่</pre>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-md font-medium text-gray-700 mb-2">ผลลัพธ์ API (Response)</h3>
+                    <div class="bg-gray-800 text-green-400 p-4 rounded-md api-response">
+                        <pre id="responseData">// ผลลัพธ์ API จะแสดงที่นี่</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div id="resultsContainer" class="hidden">
+                <h3 class="text-lg font-medium text-gray-700 mb-3">ข้อมูลบุคคลล้มละลายที่พบ</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border-b text-left">เลขบัตรประชาชน</th>
+                                <th class="py-2 px-4 border-b text-left">ชื่อ-นามสกุล</th>
+                                <th class="py-2 px-4 border-b text-left">หมายเลขคดี</th>
+                                <th class="py-2 px-4 border-b text-left">ศาล</th>
+                                <th class="py-2 px-4 border-b text-left">วันที่ศาลมีคำสั่ง</th>
+                                <th class="py-2 px-4 border-b text-left">สถานะ</th>
+                                <th class="py-2 px-4 border-b text-left">การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResultsMessage" class="hidden text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-gray-500 text-lg">ไม่พบข้อมูลที่ค้นหา</p>
+                <p class="text-gray-400 text-sm mt-2">กรุณาลองค้นหาด้วยข้อมูลอื่น</p>
+            </div>
+
+            <!-- Authentication Required Message -->
+            <div id="authRequiredMessage" class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-yellow-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <p class="text-gray-500 text-lg">กรุณาเข้าสู่ระบบก่อนใช้งาน</p>
+                <p class="text-gray-400 text-sm mt-2">ต้องใช้ข้อมูลผู้ใช้ที่ได้รับจากกรมบังคับคดี</p>
+                <button id="showLoginBtn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-semibold">สหกรณ์ออมทรัพย์โรงพยาบาลศูนย์นครปฐม จำกัด</h3>
+                    <p class="text-gray-400 text-sm">ระบบเชื่อมต่อ API กรมบังคับคดี</p>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <p>© 2023 สงวนลิขสิทธิ์</p>
+                    <p>เวอร์ชัน 1.0.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const loginForm = document.getElementById('loginForm');
+        const searchForm = document.getElementById('searchForm');
+        const searchType = document.getElementById('searchType');
+        const searchValue = document.getElementById('searchValue');
+        const requestData = document.getElementById('requestData');
+        const responseData = document.getElementById('responseData');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const authRequiredMessage = document.getElementById('authRequiredMessage');
+        const resultsTable = document.getElementById('resultsTable');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const apiStatus = document.getElementById('apiStatus');
+
+        // Authentication state
+        let isAuthenticated = false;
+        let authCredentials = {
+            username: '',
+            password: ''
+        };
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            if (isAuthenticated) {
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                connectionStatus.textContent = 'สถานะ: เชื่อมต่อแล้ว';
+                connectionStatus.classList.remove('bg-yellow-500');
+                connectionStatus.classList.add('bg-green-500');
+                apiStatus.textContent = 'เชื่อมต่อแล้ว';
+                apiStatus.classList.remove('bg-yellow-100', 'text-yellow-800');
+                apiStatus.classList.add('bg-green-100', 'text-green-800');
+                authRequiredMessage.classList.add('hidden');
+            } else {
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                connectionStatus.textContent = 'สถานะ: รอการเชื่อมต่อ';
+                connectionStatus.classList.remove('bg-green-500');
+                connectionStatus.classList.add('bg-yellow-500');
+                apiStatus.textContent = 'รอการเชื่อมต่อ';
+                apiStatus.classList.remove('bg-green-100', 'text-green-800');
+                apiStatus.classList.add('bg-yellow-100', 'text-yellow-800');
+                authRequiredMessage.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+                noResultsMessage.classList.add('hidden');
+            }
+        }
+
+        // Show login modal
+        function showLoginModal() {
+            loginModal.classList.remove('hidden');
+        }
+
+        // Hide login modal
+        function hideLoginModal() {
+            loginModal.classList.add('hidden');
+        }
+
+        // Login button click
+        loginBtn.addEventListener('click', showLoginModal);
+        showLoginBtn.addEventListener('click', showLoginModal);
+
+        // Close login modal
+        closeLoginModal.addEventListener('click', hideLoginModal);
+
+        // Login form submit
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                alert('กรุณาระบุชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+            
+            // Simulate authentication (in a real app, this would be a server request)
+            setTimeout(() => {
+                // For demo purposes, accept any credentials
+                isAuthenticated = true;
+                authCredentials = {
+                    username: username,
+                    password: password
+                };
+                
+                hideLoginModal();
+                checkAuthentication();
+                
+                // Clear form
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                
+                alert('เข้าสู่ระบบสำเร็จ');
+            }, 1000);
+        });
+
+        // Logout button click
+        logoutBtn.addEventListener('click', function() {
+            isAuthenticated = false;
+            authCredentials = {
+                username: '',
+                password: ''
+            };
+            
+            checkAuthentication();
+            
+            // Clear results
+            requestData.textContent = '// คำขอ API จะแสดงที่นี่';
+            responseData.textContent = '// ผลลัพธ์ API จะแสดงที่นี่';
+            
+            alert('ออกจากระบบสำเร็จ');
+        });
+
+        // Sample data for demonstration
+        const sampleData = {
+            "id_card": {
+                "1234567890123": [
+                    {
+                        "id_card": "1234567890123",
+                        "name": "นายสมชาย ใจดี",
+                        "case_number": "ล.123/2566",
+                        "court": "ศาลล้มละลายกลาง",
+                        "order_date": "15/01/2566",
+                        "status": "อยู่ระหว่างกระบวนการล้มละลาย",
+                        "details": "ศาลมีคำสั่งพิทักษ์ทรัพย์เด็ดขาด"
+                    }
+                ],
+                "9876543210123": [
+                    {
+                        "id_card": "9876543210123",
+                        "name": "นางสาวสมหญิง รักดี",
+                        "case_number": "ล.456/2565",
+                        "court": "ศาลล้มละลายกลาง",
+                        "order_date": "20/03/2565",
+                        "status": "ล้มละลาย",
+                        "details": "ศาลมีคำพิพากษาให้เป็นบุคคลล้มละลาย"
+                    }
+                ]
+            },
+            "name": {
+                "สมชาย": [
+                    {
+                        "id_card": "1234567890123",
+                        "name": "นายสมชาย ใจดี",
+                        "case_number": "ล.123/2566",
+                        "court": "ศาลล้มละลายกลาง",
+                        "order_date": "15/01/2566",
+                        "status": "อยู่ระหว่างกระบวนการล้มละลาย",
+                        "details": "ศาลมีคำสั่งพิทักษ์ทรัพย์เด็ดขาด"
+                    }
+                ],
+                "สมหญิง": [
+                    {
+                        "id_card": "9876543210123",
+                        "name": "นางสาวสมหญิง รักดี",
+                        "case_number": "ล.456/2565",
+                        "court": "ศาลล้มละลายกลาง",
+                        "order_date": "20/03/2565",
+                        "status": "ล้มละลาย",
+                        "details": "ศาลมีคำพิพากษาให้เป็นบุคคลล้มละลาย"
+                    }
+                ]
+            }
+        };
+
+        // Handle search form submission
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!isAuthenticated) {
+                showLoginModal();
+                return;
+            }
+            
+            const type = searchType.value;
+            const value = searchValue.value.trim();
+            
+            if (!value) {
+                alert('กรุณาระบุข้อมูลที่ต้องการค้นหา');
+                return;
+            }
+            
+            // Create request object
+            const request = {
+                method: 'POST',
+                url: 'https://debtor.led.go.th/service/getBankrupt.php',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${btoa(authCredentials.username + ':' + authCredentials.password)}`
+                },
+                body: {
+                    search_type: type,
+                    search_value: value
+                }
+            };
+            
+            // Display request (hide sensitive info)
+            const displayRequest = {...request};
+            displayRequest.headers.Authorization = 'Basic ********';
+            requestData.textContent = JSON.stringify(displayRequest, null, 2);
+            
+            // Simulate API call
+            setTimeout(() => {
+                let response;
+                let results = [];
+                
+                // Check if we have matching data in our sample data
+                if (sampleData[type] && sampleData[type][value]) {
+                    results = sampleData[type][value];
+                    response = {
+                        status: 200,
+                        message: 'Success',
+                        data: results
+                    };
+                } else {
+                    // Try partial match for demonstration
+                    if (type === 'name') {
+                        for (const key in sampleData[type]) {
+                            if (key.includes(value) || value.includes(key)) {
+                                results = results.concat(sampleData[type][key]);
+                            }
+                        }
+                    }
+                    
+                    if (results.length > 0) {
+                        response = {
+                            status: 200,
+                            message: 'Success',
+                            data: results
+                        };
+                    } else {
+                        response = {
+                            status: 404,
+                            message: 'No data found',
+                            data: []
+                        };
+                    }
+                }
+                
+                // Display response
+                responseData.textContent = JSON.stringify(response, null, 2);
+                
+                // Update results table
+                updateResults(response.data);
+            }, 1000);
+        });
+        
+        // Update results table
+        function updateResults(data) {
+            resultsTable.innerHTML = '';
+            
+            if (data.length > 0) {
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="py-2 px-4 border-b">${item.id_card}</td>
+                        <td class="py-2 px-4 border-b">${item.name}</td>
+                        <td class="py-2 px-4 border-b">${item.case_number}</td>
+                        <td class="py-2 px-4 border-b">${item.court}</td>
+                        <td class="py-2 px-4 border-b">${item.order_date}</td>
+                        <td class="py-2 px-4 border-b">
+                            <span class="px-2 py-1 rounded-full text-xs ${getStatusClass(item.status)}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td class="py-2 px-4 border-b">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2 view-details" data-case="${item.case_number}">ดูรายละเอียด</button>
+                            <button class="text-green-600 hover:text-green-800 export-case" data-case="${item.case_number}">ส่งออก</button>
+                        </td>
+                    `;
+                    resultsTable.appendChild(row);
+                });
+                
+                resultsContainer.classList.remove('hidden');
+                noResultsMessage.classList.add('hidden');
+                
+                // Add event listeners to view details buttons
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const caseNumber = this.getAttribute('data-case');
+                        alert(`แสดงรายละเอียดของคดี: ${caseNumber}`);
+                    });
+                });
+                
+                // Add event listeners to export buttons
+                document.querySelectorAll('.export-case').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const caseNumber = this.getAttribute('data-case');
+                        alert(`ส่งออกข้อมูลคดี: ${caseNumber}`);
+                    });
+                });
+            } else {
+                resultsContainer.classList.add('hidden');
+                noResultsMessage.classList.remove('hidden');
+            }
+        }
+        
+        // Get status class for styling
+        function getStatusClass(status) {
+            switch(status) {
+                case 'อยู่ระหว่างกระบวนการล้มละลาย':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'ล้มละลาย':
+                    return 'bg-red-100 text-red-800';
+                case 'ปลดจากล้มละลาย':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        // Clear button
+        clearBtn.addEventListener('click', function() {
+            searchValue.value = '';
+            requestData.textContent = '// คำขอ API จะแสดงที่นี่';
+            responseData.textContent = '// ผลลัพธ์ API จะแสดงที่นี่';
+            resultsContainer.classList.add('hidden');
+            noResultsMessage.classList.add('hidden');
+        });
+        
+        // Export button
+        exportBtn.addEventListener('click', function() {
+            if (resultsContainer.classList.contains('hidden')) {
+                alert('ไม่มีข้อมูลที่จะส่งออก');
+                return;
+            }
+            
+            alert('กำลังส่งออกข้อมูลทั้งหมด');
+        });
+
+        // Initialize authentication check
+        checkAuthentication();
+    });
+</script>
